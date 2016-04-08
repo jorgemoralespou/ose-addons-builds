@@ -1,0 +1,15 @@
+#!/bin/sh
+__DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
+# Copy contents of module into /wildfly/modules/system/layers/base/
+cp -Rf ${__DIR}/files/* /wildfly/modules/system/layers/base/
+
+# Inject configuration into /wildfly/standalone/configuration/standalone.xml
+# First, we load the driver
+CONTENT=$(cat ${__DIR}/config/driver-template.xml)
+sed -i -e "/<drivers>/a\ $(echo $CONTENT | sed -e 's/[\/&]/\\&/g')" /wildfly/standalone/configuration/standalone.xml
+
+# Then we load the datasource
+CONTENT="$(cat ${__DIR}/config/ds-template.xml)"
+sed -i -e "/<datasources>/a\ $(echo $CONTENT | sed -e 's/[\/&]/\\&/g')" /wildfly/standalone/configuration/standalone.xml

@@ -1,0 +1,330 @@
+{
+  "kind": "List",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "example-wildfly-addons"
+  },
+  "items": [
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons",
+        "labels": {
+          "app": "example-wildfly-addons"
+        }
+      },
+      "spec": {}
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons",
+        "labels": {
+          "app": "example-wildfly-addons"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "8080-tcp",
+            "protocol": "TCP",
+            "port": 8080,
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "deploymentconfig": "example-wildfly-addons"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons",
+        "labels": {
+          "app": "example-wildfly-addons"
+        }
+      },
+      "spec": {
+        "host": "",
+        "to": {
+          "kind": "Service",
+          "name": "example-wildfly-addons"
+        },
+        "port": {
+          "targetPort": "8080-tcp"
+        }
+      }
+    },
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons",
+        "labels": {
+          "app": "example-wildfly-addons"
+        }
+      },
+      "spec": {
+        "triggers": [
+          {
+            "type": "Generic",
+            "generic": {
+              "secret": "secret"
+            }
+          },
+          {
+            "type": "GitHub",
+            "github": {
+              "secret": "secret"
+            }
+          },
+          {
+            "type": "ImageChange",
+            "imageChange": {}
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "source": {
+          "type": "Git",
+          "git": {
+            "uri": "https://github.com/jboss-openshift/openshift-quickstarts",
+            "ref": "1.2"
+          },
+          "contextDir": "todolist/todolist-jdbc",
+          "images": [
+            {
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "postgresql-driver-addon:latest"
+              },
+              "paths": [
+                {
+                  "destinationDir": "addons/postgresql/",
+                  "sourcePath": "/addon/."
+                }
+              ]
+            }
+          ]
+        },
+        "strategy": {
+          "type": "Source",
+          "sourceStrategy": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "name": "s2i-wildfly-addons:latest"
+            }
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "example-wildfly-addons:latest"
+          }
+        },
+        "resources": {},
+        "postCommit": {}
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons",
+        "labels": {
+          "app": "example-wildfly-addons"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling",
+          "rollingParams": {
+            "updatePeriodSeconds": 1,
+            "intervalSeconds": 1,
+            "timeoutSeconds": 600,
+            "maxUnavailable": "25%",
+            "maxSurge": "25%"
+          },
+          "resources": {}
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "example-wildfly-addons"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "example-wildfly-addons:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "test": false,
+        "selector": {
+          "deploymentconfig": "example-wildfly-addons"
+        },
+        "template": {
+          "metadata": {
+            "creationTimestamp": null,
+            "labels": {
+              "app": "example-wildfly-addons",
+              "deploymentconfig": "example-wildfly-addons"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "example-wildfly-addons",
+                "image": "example-wildfly-addons:latest",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "OPENSHIFT_POSTGRESQL_DATASOURCE",
+                    "value": "TodoListDS"
+                  },
+                  {
+                    "name": "OPENSHIFT_POSTGRESQL_DB_HOST",
+                    "value": "postgresql"
+                  },
+                  {
+                    "name": "OPENSHIFT_POSTGRESQL_DB_PORT",
+                    "value": "5432"
+                  },
+                  {
+                    "name": "OPENSHIFT_POSTGRESQL_DB_NAME",
+                    "value": "postgresql"
+                  },
+                  {
+                    "name": "OPENSHIFT_POSTGRESQL_DB_USERNAME",
+                    "value": "postgresql"
+                  },
+                  {
+                    "name": "OPENSHIFT_POSTGRESQL_DB_PASSWORD",
+                    "value": "postgresql"
+                  }
+                ],
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "imagePullPolicy": "Always"
+              }
+            ],
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 30,
+            "dnsPolicy": "ClusterFirst",
+            "securityContext": {}
+          }
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "spec": {
+        "ports": [
+          {
+            "port": 5432,
+            "targetPort": 5432
+          }
+        ],
+        "selector": {
+          "deploymentConfig": "postgresql"
+        }
+      },
+      "metadata": {
+        "name": "postgresql"
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "postgresql"
+      },
+      "spec": {
+        "strategy": {
+          "type": "Recreate"
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "postgresql"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "namespace": "openshift",
+                "name": "postgresql:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "deploymentConfig": "postgresql"
+        },
+        "template": {
+          "metadata": {
+            "name": "postgresql",
+            "labels": {
+              "deploymentConfig": "postgresql"
+            }
+          },
+          "spec": {
+            "terminationGracePeriodSeconds": 60,
+            "containers": [
+              {
+                "name": "postgresql",
+                "image": "postgresql",
+                "imagePullPolicy": "Always",
+                "ports": [
+                  {
+                    "containerPort": 5432,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "POSTGRESQL_USER",
+                    "value": "postgresql"
+                  },
+                  {
+                    "name": "POSTGRESQL_PASSWORD",
+                    "value": "postgresql"
+                  },
+                  {
+                    "name": "POSTGRESQL_DATABASE",
+                    "value": "postgresql"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "kind": "List",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "s2i-wildfly-addons"
+  },
+  "items": [
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "s2i-wildfly-addons"
+      },
+      "spec": {
+        "triggers": [],
+        "source": {
+          "type": "Git",
+          "git": {
+            "uri": "https://github.com/jorgemoralespou/ose-extended-builds",
+            "ref": "master"
+          },
+          "contextDir": "s2i-wildfly-addons"
+        },
+        "strategy": {
+          "type": "Docker",
+          "dockerStrategy": {
+            "from": {
+              "kind": "DockerImage",
+              "name": "openshift/base-centos7:latest"
+            }
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "s2i-wildfly-addons:latest"
+          }
+        },
+        "resources": {}
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ImageStream",
+      "metadata": {
+        "name": "s2i-wildfly-addons"
+      },
+      "spec": {
+        "tags": [
+          {
+            "annotations": {
+              "description": "Build and run Java applications on Wildfly 10.0 using Addons",
+              "iconClass": "icon-wildfly",
+              "sampleRepo": "https://github.com/bparees/openshift-jee-sample.git",
+              "supports": "wildfly:10.0,jee,java,addons",
+              "tags": "builder,wildfly,java,addons",
+              "version": "10.0"
+            },
+            "name": "latest"
+          }
+        ]
+      }
+    }
+  ]
+}
