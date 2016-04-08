@@ -15,4 +15,5 @@ oc start-build s2i-wildfly-addons --from-dir=.. --follow --loglevel=8
 
 # Deploy an application that will use mysql addon
 oc create -f example-wildfly-addons.json 
-oc start-build example-wildfly-addons --follow --loglevel=8
+oc env bc/example-wildfly-addons BUILD_LOGLEVEL=8
+oc start-build example-wildfly-addons --follow
