@@ -2,16 +2,16 @@
   "kind": "List",
   "apiVersion": "v1",
   "metadata": {
-    "name": "example-wildfly-addons"
+    "name": "example-wildfly-addons-postgresql"
   },
   "items": [
     {
       "kind": "ImageStream",
       "apiVersion": "v1",
       "metadata": {
-        "name": "example-wildfly-addons",
+        "name": "example-wildfly-addons-postgresql",
         "labels": {
-          "app": "example-wildfly-addons"
+          "app": "example-wildfly-addons-postgresql"
         }
       },
       "spec": {}
@@ -20,9 +20,9 @@
       "kind": "Service",
       "apiVersion": "v1",
       "metadata": {
-        "name": "example-wildfly-addons",
+        "name": "example-wildfly-addons-postgresql",
         "labels": {
-          "app": "example-wildfly-addons"
+          "app": "example-wildfly-addons-postgresql"
         }
       },
       "spec": {
@@ -35,7 +35,7 @@
           }
         ],
         "selector": {
-          "deploymentconfig": "example-wildfly-addons"
+          "deploymentconfig": "example-wildfly-addons-postgresql"
         },
         "type": "ClusterIP",
         "sessionAffinity": "None"
@@ -45,16 +45,16 @@
       "kind": "Route",
       "apiVersion": "v1",
       "metadata": {
-        "name": "example-wildfly-addons",
+        "name": "example-wildfly-addons-postgresql",
         "labels": {
-          "app": "example-wildfly-addons"
+          "app": "example-wildfly-addons-postgresql"
         }
       },
       "spec": {
         "host": "",
         "to": {
           "kind": "Service",
-          "name": "example-wildfly-addons"
+          "name": "example-wildfly-addons-postgresql"
         },
         "port": {
           "targetPort": "8080-tcp"
@@ -65,9 +65,9 @@
       "kind": "BuildConfig",
       "apiVersion": "v1",
       "metadata": {
-        "name": "example-wildfly-addons",
+        "name": "example-wildfly-addons-postgresql",
         "labels": {
-          "app": "example-wildfly-addons"
+          "app": "example-wildfly-addons-postgresql"
         }
       },
       "spec": {
@@ -86,7 +86,21 @@
           },
           {
             "type": "ImageChange",
-            "imageChange": {}
+            "imageChange": {
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "s2i-wildfly-addons:latest"
+              }
+            }
+          },
+          {
+            "type": "ImageChange",
+            "imageChange": {
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "postgresql-driver-addon:latest"
+              }
+            }
           },
           {
             "type": "ConfigChange"
@@ -107,7 +121,7 @@
               },
               "paths": [
                 {
-                  "destinationDir": "addons/postgresql/",
+                  "destinationDir": "todolist/todolist-jdbc/addons/postgresql/",
                   "sourcePath": "/addon/."
                 }
               ]
@@ -126,7 +140,7 @@
         "output": {
           "to": {
             "kind": "ImageStreamTag",
-            "name": "example-wildfly-addons:latest"
+            "name": "example-wildfly-addons-postgresql:latest"
           }
         },
         "resources": {},
@@ -137,9 +151,9 @@
       "kind": "DeploymentConfig",
       "apiVersion": "v1",
       "metadata": {
-        "name": "example-wildfly-addons",
+        "name": "example-wildfly-addons-postgresql",
         "labels": {
-          "app": "example-wildfly-addons"
+          "app": "example-wildfly-addons-postgresql"
         }
       },
       "spec": {
@@ -160,11 +174,11 @@
             "imageChangeParams": {
               "automatic": true,
               "containerNames": [
-                "example-wildfly-addons"
+                "example-wildfly-addons-postgresql"
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "example-wildfly-addons:latest"
+                "name": "example-wildfly-addons-postgresql:latest"
               }
             }
           },
@@ -175,21 +189,21 @@
         "replicas": 1,
         "test": false,
         "selector": {
-          "deploymentconfig": "example-wildfly-addons"
+          "deploymentconfig": "example-wildfly-addons-postgresql"
         },
         "template": {
           "metadata": {
             "creationTimestamp": null,
             "labels": {
-              "app": "example-wildfly-addons",
-              "deploymentconfig": "example-wildfly-addons"
+              "app": "example-wildfly-addons-postgresql",
+              "deploymentconfig": "example-wildfly-addons-postgresql"
             }
           },
           "spec": {
             "containers": [
               {
-                "name": "example-wildfly-addons",
-                "image": "example-wildfly-addons:latest",
+                "name": "example-wildfly-addons-postgresql",
+                "image": "example-wildfly-addons-postgresql:latest",
                 "ports": [
                   {
                     "containerPort": 8080,
@@ -198,27 +212,19 @@
                 ],
                 "env": [
                   {
-                    "name": "OPENSHIFT_POSTGRESQL_DATASOURCE",
+                    "name": "POSTGRESQL_DATASOURCE",
                     "value": "TodoListDS"
                   },
                   {
-                    "name": "OPENSHIFT_POSTGRESQL_DB_HOST",
+                    "name": "POSTGRESQL_DATABASE",
                     "value": "postgresql"
                   },
                   {
-                    "name": "OPENSHIFT_POSTGRESQL_DB_PORT",
-                    "value": "5432"
-                  },
-                  {
-                    "name": "OPENSHIFT_POSTGRESQL_DB_NAME",
+                    "name": "POSTGRESQL_USER",
                     "value": "postgresql"
                   },
                   {
-                    "name": "OPENSHIFT_POSTGRESQL_DB_USERNAME",
-                    "value": "postgresql"
-                  },
-                  {
-                    "name": "OPENSHIFT_POSTGRESQL_DB_PASSWORD",
+                    "name": "POSTGRESQL_PASSWORD",
                     "value": "postgresql"
                   }
                 ],

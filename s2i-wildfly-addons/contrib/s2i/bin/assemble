@@ -175,7 +175,7 @@ echo "Veryfying if there are addons to install"
 for addon in `ls $ADDONS_DIR`; do
   echo "Looking into addon: ${addon}"
   # TODO: If https://github.com/openshift/origin/issues/8383, revisit BC and path below
-  if [ -f "${ADDONS_DIR}/${addon}/addon/apply" ]
+  if [ -f "${ADDONS_DIR}/${addon}/apply" ]
   then  
     echo "Installing addon: ${addon}"
     ${ADDONS_DIR}/${addon}/apply

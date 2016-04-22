@@ -1,4 +1,4 @@
-FROM fedora:latest
+FROM scratch
 
 MAINTAINER Jorge Morales <jmorales@redhat.com>
 
