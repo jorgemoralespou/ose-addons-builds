@@ -1,0 +1,372 @@
+{
+  "kind": "List",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "example-wildfly-addons-mysql"
+  },
+  "items": [
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons-mysql",
+        "labels": {
+          "app": "example-wildfly-addons-mysql"
+        }
+      },
+      "spec": {}
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons-mysql",
+        "labels": {
+          "app": "example-wildfly-addons-mysql"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "8080-tcp",
+            "protocol": "TCP",
+            "port": 8080,
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "deploymentconfig": "example-wildfly-addons-mysql"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons-mysql",
+        "labels": {
+          "app": "example-wildfly-addons-mysql"
+        }
+      },
+      "spec": {
+        "host": "",
+        "to": {
+          "kind": "Service",
+          "name": "example-wildfly-addons-mysql"
+        },
+        "port": {
+          "targetPort": "8080-tcp"
+        }
+      }
+    },
+    {
+      "kind": "BuildConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons-mysql",
+        "labels": {
+          "app": "example-wildfly-addons-mysql"
+        }
+      },
+      "spec": {
+        "triggers": [
+          {
+            "type": "Generic",
+            "generic": {
+              "secret": "secret"
+            }
+          },
+          {
+            "type": "GitHub",
+            "github": {
+              "secret": "secret"
+            }
+          },
+          {
+            "type": "ImageChange",
+            "imageChange": {
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "s2i-wildfly-addons:latest"
+              }
+            }
+          },
+          {
+            "type": "ImageChange",
+            "imageChange": {
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "mysql-driver-addon:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "source": {
+          "type": "Git",
+          "git": {
+            "uri": "https://github.com/bparees/javaee7-hol"
+          },
+          "images": [
+            {
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "mysql-driver-addon:latest"
+              },
+              "paths": [
+                {
+                  "destinationDir": "addons/mysql/",
+                  "sourcePath": "/addon/."
+                }
+              ]
+            }
+          ]
+        },
+        "strategy": {
+          "type": "Source",
+          "sourceStrategy": {
+            "from": {
+              "kind": "ImageStreamTag",
+              "name": "s2i-wildfly-addons:latest"
+            }
+          }
+        },
+        "output": {
+          "to": {
+            "kind": "ImageStreamTag",
+            "name": "example-wildfly-addons-mysql:latest"
+          }
+        },
+        "resources": {},
+        "postCommit": {}
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "example-wildfly-addons-mysql",
+        "labels": {
+          "app": "example-wildfly-addons-mysql"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling",
+          "rollingParams": {
+            "updatePeriodSeconds": 1,
+            "intervalSeconds": 1,
+            "timeoutSeconds": 600,
+            "maxUnavailable": "25%",
+            "maxSurge": "25%"
+          },
+          "resources": {}
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "example-wildfly-addons-mysql"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "example-wildfly-addons-mysql:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "test": false,
+        "selector": {
+          "deploymentconfig": "example-wildfly-addons-mysql"
+        },
+        "template": {
+          "metadata": {
+            "creationTimestamp": null,
+            "labels": {
+              "app": "example-wildfly-addons-mysql",
+              "deploymentconfig": "example-wildfly-addons-mysql"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "example-wildfly-addons-mysql",
+                "image": "example-wildfly-addons-mysql:latest",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "MYSQL_DATASOURCE",
+                    "value": "MySQLDS"
+                  },
+                  {
+                    "name": "MYSQL_DATABASE",
+                    "value": "mysql"
+                  },
+                  {
+                    "name": "MYSQL_USER",
+                    "value": "mysql"
+                  },
+                  {
+                    "name": "MYSQL_PASSWORD",
+                    "value": "mysql"
+                  }
+                ],
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "imagePullPolicy": "Always"
+              }
+            ],
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 30,
+            "dnsPolicy": "ClusterFirst",
+            "securityContext": {}
+          }
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "spec": {
+        "ports": [
+          {
+            "port": 3306,
+            "targetPort": 3306
+          }
+        ],
+        "selector": {
+          "deploymentConfig": "mysql"
+        }
+      },
+      "metadata": {
+        "name": "mysql"
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "mysql"
+      },
+      "spec": {
+        "strategy": {
+          "type": "Recreate",
+          "recreateParams": {
+            "timeoutSeconds": 600
+          },
+          "resources": {}
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "containerNames": [
+                "mysql"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "namespace": "openshift",
+                "name": "mysql:latest"
+              }
+            }
+          },
+          {
+            "type": "ConfigChange"
+          }
+        ],
+        "replicas": 1,
+        "test": false,
+        "selector": {
+          "name": "mysql"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "mysql"
+            }
+          },
+          "spec": {
+            "volumes": [
+              {
+                "name": "mysql-data",
+                "emptyDir": {}
+              }
+            ],
+            "containers": [
+              {
+                "name": "mysql",
+                "image": "mysql",
+                "ports": [
+                  {
+                    "containerPort": 3306,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "MYSQL_USER",
+                    "value": "mysql"
+                  },
+                  {
+                    "name": "MYSQL_PASSWORD",
+                    "value": "mysql"
+                  },
+                  {
+                    "name": "MYSQL_DATABASE",
+                    "value": "mysql"
+                  }
+                ],
+                "resources": {
+                  "limits": {
+                    "memory": "512Mi"
+                  }
+                },
+                "volumeMounts": [
+                  {
+                    "name": "mysql-data",
+                    "mountPath": "/var/lib/mysql/data"
+                  }
+                ],
+                "livenessProbe": {
+                  "tcpSocket": {
+                    "port": 3306
+                  },
+                  "initialDelaySeconds": 30,
+                  "timeoutSeconds": 1,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "imagePullPolicy": "IfNotPresent",
+                "securityContext": {
+                  "capabilities": {},
+                  "privileged": false
+                }
+              }
+            ],
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 30,
+            "dnsPolicy": "ClusterFirst",
+            "securityContext": {}
+          }
+        }
+      }
+    }
+  ]
+}
